@@ -4,7 +4,7 @@
 [vs-sr-dev/3dokit](https://github.com/vs-sr-dev/3dokit)) was started by
 Immercenary's port and grew on Crash 'n Burn's; Doctor Hauzer is its third
 game, and the first on Portfolio 20.21. Each entry is a 3dokit commit and
-what this game asked of it. The submodule was taken at **eb96a85**; it is at **c11e36d**.
+what this game asked of it. The submodule was taken at **eb96a85**; it is at **075ad17**.
 
 ## Session 1
 
@@ -164,3 +164,18 @@ Checked against session 3's baseline (0903c17) with session 3's
 `--boot --max-calls 60000 --pad a@1300x1`, Immercenary's `p` and its
 `--boot --max-calls 300000` replay, OMF2097's `LaunchMe`: **the same byte
 for byte**, after the folios' versions alone and again after all five.
+
+After the user played it in the window, two more changes, one commit
+(**075ad17**, pushed with the user's word; pc-crashnburn 0fefb3e and
+PC-Immercenary 1620ece moved to it, the latter noting its new baseline), for
+the rooms' music (`docs/06`, "The music in the rooms"):
+
+| file | What |
+|---|---|
+| `runtime/pf_audio.cpp` | an AIFF's 80-bit rate read a byte at a time, as the folio reads it (20.27's 0x9d20): the word loads at +10 and +14 were unaligned, and every rate came out wrong |
+| `runtime/pf_task.cpp` | the kernel's quantum: a FIRQ every task's quantum (15 ms by default) that reschedules when a task of at least the running one's priority is ready (20.21's 0x16ec8, 1993's 0x1780c, 23.10's 0x7320) |
+
+Checked: Crash 'n Burn's and OMF2097's traces the same byte for byte;
+Immercenary's differ only in its samples' rates (22 lines of `p` and of
+its replay), and its replay's sound (`--wav`, to 1,500,000 calls,
+471,859,208 bytes) is the same byte for byte.

@@ -16,7 +16,7 @@ is at the bottom. Read the top, not the history.
 | `... --pad start@11500+6` too | Start at the menu: the prologue, the door, `now LOADING...`, **the first room**; the pad moves the visitor (`--pad down@18100+240 --pad right@18400+90 --pad up@18550+300`) |
 | the stop | **none** to 5,000,000 calls |
 | the NVRAM | `--nvram DIR` keeps it (`DIR/nvram.bin`); the save written, then read back on the next start (`docs/05`) |
-| the kit | **c11e36d** in every port (`docs/06`, `docs/10`): the folios' versions, OPERAMATH 20.53's two SWIs, `SleepAudioTicks` and a cue's deletion, `pf_free_signal` of a task, the timer's unit 1; committed and pushed |
+| the kit | **075ad17** in every port (`docs/06`, `docs/10`): c11e36d (the folios' versions, OPERAMATH 20.53's two SWIs, `SleepAudioTicks` and a cue's deletion, `pf_free_signal` of a task, the timer's unit 1), then an AIFF's rate read right and the kernel's quantum (the rooms' music); committed and pushed |
 
 ```sh
 cd D:/Homebrew6 && PYTHONIOENCODING=utf-8 python -m 3dokit.recomp --out pc-doctorhauzer/build/recomp --optest \
@@ -46,13 +46,13 @@ kernel), `ki.dis` (23.10's), `op.dis` (Operator 20.18), `om.dis`
 
 ## The work, in order
 
-### 1. Publishing this repository
+### 1. Play on, with the user
 
-The user's criterion (session 1): published once the game is playable.
-After session 4 the user's view: if the first rooms play in the window
-without a crash and with their sound, it is met. On the user's word:
-create `vs-sr-dev/pc-doctorhauzer` on GitHub and push (the README's links
-to 3dokit and the documentation repository are already public).
+Published (session 4): the user played the first rooms in the window --
+the three cameras (fixed, from above, first person), the menu, a save --
+and, after the music's fix, confirmed the sound right. The repository is
+public at `vs-sr-dev/pc-doctorhauzer`; push each session's commits there
+on the user's word.
 
 ### 2. Play it: the window, and the next stop
 
@@ -136,6 +136,8 @@ Soft's logo (the runtime plays it, a blue field); "in 1952" and "1952年"
   --nvram build/nvram`), tried by the user: the logo, the title, Start, the
   opening film to the kabong stop -- **the sound is there throughout, and
   right**.
+* (Session 4) **Publishing**: the user's criterion met (the first rooms
+  play in the window with their sound); published with the user's word.
 * (Session 4) The kabong read (session 3's item 1): a read the console
   never makes -- the game kabongs only on a File folio 0.0, and the
   runtime's folio nodes had no versions (`docs/06`).
@@ -211,6 +213,13 @@ Soft's logo (the runtime plays it, a blue field); "in 1952" and "1952年"
 * **The kit**: five changes, regressed (the other ports' traces the same
   byte for byte); c11e36d, pushed with the user's word, every port's
   submodule moved (pc-crashnburn f9643f6, PC-Immercenary 89ae6ef).
+* **The window**, played by the user: the cameras, the menu, a save; the
+  rooms' music repeating. Two kit causes (`docs/06`): an AIFF's rate read
+  with unaligned word loads (the game picked the full-rate player for its
+  22,050 Hz music), and no kernel quantum (the music thread, at the main
+  task's priority, starved). 075ad17, pushed; the user confirmed the sound
+  right.
+* **Published**: `vs-sr-dev/pc-doctorhauzer`, with the user's word.
 
 ## Session 3 (2026-10-08) -- the save: the NVRAM, its filesystem, LMADM
 

@@ -136,7 +136,9 @@ them. With four more calls read on the disc's own OPERAMATH 20.53,
 AUDIOFOLIO 20.27, Operator 20.18 and kernel, the whole opening plays, the
 menu comes up, the attract demos run in the 3D rooms, and Start at the
 menu leads through the prologue to the first room, where the pad moves the
-visitor about. Five million calls on, nothing stops the run. See
+visitor about. Five million calls on, nothing stops the run. Played in
+the window: the three cameras, the menu, a save; the rooms' music, after two
+fixes in the kit (an AIFF's rate, the kernel's quantum), plays right. See
 `TODO.md`.
 
 ## Documentation

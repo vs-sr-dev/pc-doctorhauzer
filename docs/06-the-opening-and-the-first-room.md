@@ -153,3 +153,41 @@ its replay's presses) and OMF2097 (to its stop): every trace the same,
 byte for byte, as before the changes. On Crash 'n Burn's disc nothing can
 move (its kernel is 0.0); on Immercenary's the folios and KernelBase are
 now 23.10, and nothing in those runs reads them.
+
+## The music in the rooms
+
+Played in the window, the rooms' music kept repeating itself. Two causes,
+both the kit's, both found by recording the sound (`pfboot --wav`) and
+matching each second of it against the song decoded from its file
+(`music003.aifc`, SDX2 stereo at 22,050 Hz):
+
+* **The samples' rate.** The game plays its music with the music library's
+  SoundFile player (`CreateSoundFilePlayer`, `LoadSoundFile`,
+  `ServiceSoundFile`: two buffers of 24 blocks, linked in a ring on one
+  instrument, each refilled from the file when its cue says it has
+  played), whose `SelectSamplePlayer` (0x29e6c) picks the instrument from
+  `GetAudioItemInfo`: a "half" player when the rate is 22,050 Hz. The
+  runtime read the COMM chunk's 80-bit rate with word loads at unaligned
+  addresses (the rate is at +8, its mantissa's words at +10 and +14),
+  where the folio reads its ten bytes one at a time (20.27's 0x9d20): the
+  music came out at 0x2006d622 and the game loaded `dcsqxdstereo`, not
+  `dcsqxdhalfstereo`. Immercenary's AIFF samples had the same wrong rates
+  in its traces (0x2006d622, 0x2006d6ee, 0x400eac44), with no effect on
+  its runs: its traces now differ only in those lines, and its replay's
+  sound is the same byte for byte.
+* **The kernel's quantum.** The game's main task sets itself to priority
+  99 (`SetItemPri`, call 9,048), and the music's thread `T1` is made at
+  99 too. On the console two tasks of one priority take turns at the
+  kernel's quantum, a FIRQ every 15 ms ("kernel quanta", 20.21's 0x16ec8;
+  1993's 0x1780c and 23.10's 0x7320 the same): when it ends and a task of
+  at least the running one's priority is ready, the kernel reschedules,
+  else it reloads the timer with the task's quantum (`t_MaxUSecs >> 4`
+  steps of 16 us, 15,000 us unless `CREATETASK_TAG_MAXQ` says otherwise,
+  0x161ec). The runtime had no quantum: when the room is entered the main
+  task computes for about three seconds without waiting, the music's
+  thread never ran, missed its refills, and the two buffers repeated their
+  2.2 seconds from then on. The runtime now has the quantum (an event at
+  each task's switch-in), and the music matches the song second by second.
+
+Crash 'n Burn's and OMF2097's traces stay the same byte for byte with both
+changes.
