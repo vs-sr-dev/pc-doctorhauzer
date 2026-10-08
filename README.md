@@ -141,6 +141,20 @@ the window: the three cameras, the menu, a save; the rooms' music, after two
 fixes in the kit (an AIFF's rate, the kernel's quantum), plays right. See
 `TODO.md`.
 
+**How it plays.** The rooms are real-time 3D -- unlike Alone in the Dark's
+pre-rendered backgrounds, the rooms themselves are geometry: each frame the
+game turns its vertices through Operamath and draws every textured face as
+a cel mapped onto a quadrilateral, which is what lets it offer a fixed, an
+overhead and a first-person camera. On the console the ARM60 at 12.5 MHz
+struggles with it, and the game is at the edge of playable. Here the
+game's own code runs unchanged and its time is the ARM60's own clocks, but
+the runtime does not charge it the waits the console's hardware imposes
+(the cel engine's drawing, the DMA's share of the bus), nor the OS's own
+work: the frame rate still varies with what is on the screen, as the game
+was written to, and the walking pace stays the same, but in the user's
+judgement it plays far more smoothly than on the console -- smooth the
+right way, the game as it should have run.
+
 ## Documentation
 
 | | |
