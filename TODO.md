@@ -83,6 +83,15 @@ add DrawChar to `pfcheck`.
   `fi_BlockCount` and `fi_ByteCount` 0 and no bytes; the console's root
   is 1 block of 2048 with seven avatars, its bytes the disc image's
   (`docs/06`). A read of a directory's blocks still stops the run.
+* **The frame rate against Phoenix.** The user, in the window: the frame
+  rate varies with what is on the screen, and the footsteps' sound with it
+  (a step every so many animation frames), while the walking pace stays
+  the same (the game scales its movement by the time passed -- likely what
+  it reads the timer's microseconds for). As on the console; the runtime
+  charges the ARM60's clocks but not the cel engine's time nor the DMA's
+  share of the bus, so in a full scene it can only run faster than the
+  console, never slower. To measure: the same room and camera in the
+  window and in Phoenix, footsteps a second in an empty and a full scene.
 * **The opening against Phoenix.** The user's screenshots (session 1)
   show "in 1952" in red italics and "1952年" in a white box between
   Riverhill's logo and the newspaper; the runtime's frames show the
