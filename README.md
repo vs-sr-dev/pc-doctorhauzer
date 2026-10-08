@@ -81,18 +81,21 @@ python -m 3dokit.arm build/disc/launchme --names
 python -m 3dokit.portfolio build/disc/launchme --sites
 python -m 3dokit.recomp.discover build/disc/launchme --report
 
-# the recompiler: C++ for the whole program (six seeds: docs/01), and its self-test
+# the recompiler: C++ for the whole program (seven seeds: docs/01, docs/05), the
+# save-game utility, and the disc's own NVRAM tools (docs/05); and the self-test
 python -m 3dokit.recomp --out build/recomp --optest \
-  "launchme=build/disc/launchme+310d0,311f0,31310,31438,31558,31680" \
-  "sramtools=build/disc/OrgData/program/sramtools"
+  "launchme=build/disc/launchme+310d0,311f0,31310,31438,31558,31680,2ced4" \
+  "sramtools=build/disc/OrgData/program/sramtools" \
+  "lmadm=build/disc/System/Programs/LMADM" "format=build/disc/System/Programs/FORMAT"
 python -m 3dokit.recomp.selftest --image launchme=build/disc/launchme+310d0,311f0,31310,31438,31558,31680 \
   --auto --out build/recomp/selftest/launchme.txt
 cmake -S build/recomp -B build/recomp-build -G Ninja -DCMAKE_CXX_COMPILER=clang++
 ninja -C build/recomp-build
 build/recomp-build/selftest build/recomp/selftest/*.txt
 
-# the disc as the console starts it, every OS call traced
-build/recomp-build/pfboot build/disc --boot --trace 1 --max-calls 5000
+# the disc as the console starts it, every OS call traced; the NVRAM kept in
+# build/nvram/nvram.bin between runs (without --nvram it is blank each time)
+build/recomp-build/pfboot build/disc --boot --trace 1 --max-calls 5000 --nvram build/nvram
 ```
 
 ## Status
@@ -114,7 +117,16 @@ in the runtime's OS memory, and the folio's built-in font answered from
 its own data and code, checked on it. `launchme` goes on to read its own
 Japanese font and to look for its save in NVRAM; the kernel's `GetSysErr`
 follows, its texts read from the disc's own kernel and File folio, and the
-run stops at its 9,058th call, `CreateFile`: the save. See `TODO.md`.
+run stops at its 9,058th call, `CreateFile`: the save.
+
+**Session 3**: the save. The Operator's `ram` device and the console's
+NVRAM behind it (kept on the host with `pfboot --nvram DIR`), and the File
+folio 20.30's linked-memory filesystem on it, read in the disc's own
+`os_code`; the disc's own `LMADM` and `FORMAT` recompiled, run by the shell
+as `startopera` names them: on a blank NVRAM they format it as a fresh
+console's. The game creates its save, writes it and reads it back on the
+next start; it shows its title, `PUSH "P" BUTTON!`, and on Start plays its
+opening film on its own DataStream, to its 196,582nd call. See `TODO.md`.
 
 ## Documentation
 
@@ -125,6 +137,7 @@ run stops at its 9,058th call, `CreateFile`: the save. See `TODO.md`.
 | [02-the-os-version](docs/02-the-os-version.md) | Portfolio 20.21: the kernel, the folios, and the runtime's 1993/23.10 switches |
 | [03-the-decompressor-and-the-font](docs/03-the-decompressor-and-the-font.md) | the images' decompressor in C++, GRAPHIX in the OS's memory, the folio's font |
 | [04-the-error-texts-and-the-save](docs/04-the-error-texts-and-the-save.md) | `GetSysErr` on the 20.21 kernel, and what the save asks for |
+| [05-the-save](docs/05-the-save.md) | the NVRAM, the File folio's linked-memory filesystem, the disc's own LMADM and FORMAT |
 | [10-3dokit](docs/10-3dokit.md) | what this port gave 3dokit |
 
 ## Licence

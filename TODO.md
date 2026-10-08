@@ -9,90 +9,81 @@ is at the bottom. Read the top, not the history.
 |---|---|
 | the disc on the kit | 366 files, all the pipeline's to the hash; battery clean (`docs/01`) |
 | the OS | Portfolio 20.21; GRAPHIX 20.45, AUDIOFOLIO 20.27, File folio 20.30 (`docs/02`) |
-| `launchme` recompiled | 1,109 functions, 45,525 instructions, six seeds; self-test 0 failures |
-| `sramtools` recompiled | 199 functions, 14,047 instructions; self-test 0 failures |
-| `pfboot build/disc --boot` | the shell's scripts, then `launchme` past the font and `GetSysErr` to its **9,058th OS call**, `CreateFile` |
-| on the screen | the 3DO logo (`OrgData/etc/3DOlogo.cel`, 8-bit coded, at 120,40), faded in, then dimmed |
-| the kit | aceddb7 in every port: session 2's decompressor, font and `GetSysErr`, committed and pushed (`docs/10`) |
+| `launchme` recompiled | 1,109 functions, 45,525 instructions, **seven seeds** (0x2ced4 added); self-test 0 failures |
+| `sramtools`, `lmadm`, `format` recompiled | 199, 64 and 34 functions; self-test 0 failures |
+| `pfboot build/disc --boot` | `lmadm` (and `format` on a blank NVRAM), then `launchme`: the save made, the title, waiting for Start |
+| `... --pad start@400+6` | the opening film on the game's own DataStream, to its **196,582nd OS call**: the "kabong" read of `.` |
+| on the screen | the 3DO logo; the title (`CopyRight.img`, `PUSH "P" BUTTON!`); the opening film |
+| the NVRAM | `--nvram DIR` keeps it (`DIR/nvram.bin`); the save written, then read back on the next start (`docs/05`) |
+| the kit | **0903c17** in every port: session 3's NVRAM, linked-memory filesystem, LMADM; committed and pushed (`docs/10`) |
 
 ```sh
-PYTHONIOENCODING=utf-8 python -m 3dokit.recomp --out build/recomp --optest \
-  "launchme=build/disc/launchme+310d0,311f0,31310,31438,31558,31680" \
-  "sramtools=build/disc/OrgData/program/sramtools"   # from D:/Homebrew6 (paths adjusted) whenever the kit has uncommitted work
-export PATH=/c/msys64/mingw64/bin:$PATH                                # for cmake/ninja/clang only: its python has no capstone
+cd D:/Homebrew6 && PYTHONIOENCODING=utf-8 python -m 3dokit.recomp --out pc-doctorhauzer/build/recomp --optest \
+  "launchme=pc-doctorhauzer/build/disc/launchme+310d0,311f0,31310,31438,31558,31680,2ced4" \
+  "sramtools=pc-doctorhauzer/build/disc/OrgData/program/sramtools" \
+  "lmadm=pc-doctorhauzer/build/disc/System/Programs/LMADM" \
+  "format=pc-doctorhauzer/build/disc/System/Programs/FORMAT"   # from D:/Homebrew6 whenever the kit has uncommitted work
+export PATH=/c/msys64/mingw64/bin:$PATH                       # for cmake/ninja/clang only: its python has no capstone
 cmake -S build/recomp -B build/recomp-build -G Ninja -DCMAKE_CXX_COMPILER=clang++ && ninja -C build/recomp-build
-build/recomp-build/selftest build/recomp/selftest/optest.txt build/recomp/selftest/launchme.txt build/recomp/selftest/sramtools.txt
-build/recomp-build/pfboot build/disc --boot --trace 1 --max-calls 10000 | tail   # to the stop
-build/recomp-build/pfboot build/disc --boot --trace 0 --max-calls 9057 --frames DIR
-build/recomp-build/pfboot build/disc --boot --trace 0 --snap N DIR               # then, for a font call:
-python -m 3dokit.pfcheck build/disc/System/Kernel/os_code DIR --graphix build/disc/System/Folios/GRAPHIX [--font-start]
+build/recomp-build/selftest build/recomp/selftest/*.txt
+build/recomp-build/pfboot build/disc --boot --trace 1 --max-calls 200000 --pad start@400+6 | tail   # to the stop
+build/recomp-build/pfboot build/disc --boot --trace 0 --max-calls 196580 --pad start@400+6 --frames DIR --frames-at 400-100000/60
+build/recomp-build/pfboot build/disc --boot --nvram DIR ...                        # the NVRAM kept between runs
 ```
+
+Session 3's scratchpad (`a5bbcab7-.../scratchpad`): `build.sh` (the
+port's build, the commands above), `plist.py PROGRAM [FUNC...]` (a program
+listed function by function: SWIs named, strings, callees' names),
+`kp.py TRACE` (the `kprintf`s of a trace put back into text), `lmdump.py
+nvram.bin` (the NVRAM's filesystem block by block), `ff.dis` (the File
+folio 20.30 disassembled whole), `regbuild.sh VARIANT KITPARENT` and
+`regrun.sh VARIANT` (the other ports' builds and runs), `itemmask.py OLD
+NEW` (two traces apart from items one greater and OS addresses).
 
 ## The work, in order
 
-### 1. The save: NVRAM and the File folio's write side (the stop at call 9,058)
+### 1. The "kabong" read (the stop at call 196,582)
 
-`GetSysErr` is in (`docs/04`). The game's save routine (0x18000) now asks
-for `CreateFile("/nvram/RH_HAUZERJ")`, then `CMD_STATUS`,
-`FILECMD_ALLOCBLOCKS` and `CMD_WRITE` of 0xC30 bytes on the new file
-(`docs/04`, "What the save asks for"); without them it deletes the file
-and shows `NoMemory.img`. To read, on the disc's own code:
+The save is in (`docs/05`). With Start pressed at the title, the opening
+film plays and the game's DataStream (lib3DO's: "Can't open kabonging
+file", "Can't create jamming I/O", "Can't create unjamming I/O", the
+functions at 0x19880 and 0x19760) opens `.` -- the current directory, the
+CD's root -- at call 12,278, asks its `CMD_STATUS` for the block size
+(0x800 when it says 0 or less), and at call 196,582 `CMD_READ`s one block
+from block 0 of it into a buffer of its own: a read meant only to move the
+drive. The runtime's disc is a host directory, whose directories have no
+blocks, and stops ("a read of 1 blocks from block 0 of "/", past its 0").
+To read, on the disc's own code:
 
-* the File folio 20.30 (`build/os/os_code_2_0.bin`, linked at 0):
-  `CreateFile` (SWI 9) and `DeleteFile` (SWI 10), and its file driver's
-  `CMD_STATUS`, `FILECMD_ALLOCBLOCKS`, `CMD_WRITE` on the linked-memory
-  filesystem;
-* how `/nvram` comes to be: the `ram` device's unit 3, kept by `$c/lmadm -a
-  ram 3 0 nvram` (`System/Programs/LMADM`, which the runtime's shell
-  passes over): its block size, its size, its free space on a fresh
-  console -- what `CMD_STATUS` and `FILECMD_ALLOCBLOCKS` answer;
-* what the disc brings for it (session 2's survey; `System/Programs`, not
-  compressed): **`FORMAT`** (`format DEVICENAME UNIT OFFSET FSNAME`: the
-  device's blocks from its status, then a label, an anchor and the
-  free space, each written to an absolute block -- a fresh NVRAM's
-  layout, from the disc's own code); **`CHKNVRAM`** (`/nvram` not mounted:
-  `$bin/format ram 3 0 nvram`, then mount); **`LMADM`** (`-a` auto-maintain,
-  `-c` check, `-d` defragment, `-m`/`-u` mount: "Not a flat linked-memory
-  filesystem", its passes over the superblock, the block links and the
-  files' sizes name the structures -- fingerprint, flink and blink
-  offsets, block count, header block count, byte count); **`LMFS`** (a
-  test tool: create, delete, read and write files in `/nvram`, and set each
-  of those header fields by hand). None of the kernel's or the folios'
-  images holds the string "nvram": the File folio's linked-memory code is
-  generic, the NVRAM is the `ram` device's unit 3 (the Operator 20.18,
-  `build/os/os_code_1_20000.bin`; `hardware_addrs.h`: NVRAM at
-  0x03140000).
-* the route this suggests: the `ram` device's unit 3 in the runtime (its
-  status: block size and count, from the Operator's driver; reads and
-  writes on a byte image), the File folio's mount of a linked-memory
-  filesystem and its driver, then **`LMADM` recompiled and run by the
-  shell** as `startopera` names it (`$c/lmadm -a ram 3 0 nvram`), so that
-  the disc's own code formats a blank NVRAM (through `format`) and mounts
-  it -- rather than the runtime laying out a filesystem itself;
-* the host side (decided): `pfboot --nvram DIR` keeps the NVRAM's files in
-  a host directory -- most simply the device's bytes, one image file there,
-  as the console keeps them; without it an NVRAM in memory, blank at each
-  boot, which the disc's own `lmadm`/`format` then prepare as on a fresh
-  console.
+* the File folio 20.30's driver for a read of a directory on a CD (its
+  optimized filesystem's functions, the table at 0x224c: 0x1448, 0x1510,
+  0x199c, 0x1ac4, 0x1a48), and its own "## KABONG ##" string at 0x64c8:
+  what it does with such a read;
+* what the root directory's `File` says on the console (`fi_BlockCount`,
+  `fi_ByteCount`: the Opera directory's own blocks), and what its block 0
+  holds -- the disc image's, which the extracted tree does not keep; the
+  kit's `disc.py` and `tdk_opera` read it from the image.
 
 ### 2. The text in the folio's font, when the run reaches it
 
 The font's calls are in (`docs/03`), checked on 20.45's own code. Still
 unseen: `DrawChar`/`DrawText8` (the box at 0x1fa34, reached from 0x1f00c
-and 0x1f598). When it is reached: check its frame against Phoenix's title
-(`PUSH "P" BUTTON!` has quotes, which the 49 characters lack: a character
-not in the font stops the run, with the word the folio would point the
-CCB at); and add DrawChar to `pfcheck` (its `DrawCels` is refused there
+and 0x1f598). The title's `PUSH "P" BUTTON!` turned out to be part of an
+image (`CopyRight.img`), not the folio's font. When it is reached: check
+its frame against Phoenix's (a character not in the font stops the run,
+with the word the folio would point the CCB at); and add DrawChar to
+`pfcheck` (its `DrawCels` is refused there
 now: compare up to the cel engine, the bitmap's pixels set aside).
 
 ### 3. On from there, one call at a time
 
-What the surface promises (`docs/01`): the File folio's `CreateFile` and
-`DeleteFile` and NVRAM (`/nvram/RH_HAUZERJ`, `/nvram/another`; the disc's
-`startopera` runs `$c/lmadm -a ram 3 0 nvram`, which the runtime's shell
-passes over); `$boot/OrgData/program/sramtools` started by `launchme`;
+What the surface promises (`docs/01`): `/nvram/another` (a second file in
+the NVRAM); `$boot/OrgData/program/sramtools` started by `launchme` -- the
+save-game manager, which will likely want the File folio's directory
+vectors (`OpenDirectoryItem` 0x6214, `OpenDirectoryPath` 0x641c,
+`ReadDirectory` 0x6430, `CloseDirectory` 0x661c: not in the runtime yet);
 `ControlMem`; the films through the game's own DataStream (`OrgData/stream`,
-eight streams); the music (`OrgData/music`, AIFC SDX2) and the effects; the
+eight streams: OPDS plays); the music (`OrgData/music`, AIFC SDX2) and the effects; the
 3D rooms (many small cels a frame, `MapCel`, the projector's edge cases;
 729 8-bit cels in the rooms); Japanese text in the game's own font
 (`OrgData/font/fontNew.bin`, which `launchme` reads right after the
@@ -114,14 +105,16 @@ The user's Phoenix screenshots of the opening (session 1, in
    same (33 fields, at 120,40);
 2. the title: "Doctor Hauzer" in green, "(C)1994 Riverhill Soft Inc.",
    "(C)1994 Matsushita Electric Industrial Co., Ltd." and **`PUSH "P"
-   BUTTON!`** in yellow capitals -- capitals, quotes and an exclamation
-   mark (see 2.);
+   BUTTON!`** in yellow capitals -- an image, `CopyRight.img`, which the
+   runtime shows the same (session 3);
 3. Riverhill Soft's logo: white squares appearing on a blue field, then
    the fourth, red, turning, on black, "RIVERHILL SOFT" under it (a film:
    `GODS`, 260x200, 131 frames, no sound, is the candidate);
 4. "in 1952" in red italics and "1952年" in a white box (Japanese text:
    the game's own font);
-5. a newspaper, "Archeologists & Historians" (a film, the intro).
+5. a newspaper, "Archeologists & Historians" (a film, the intro) -- the
+   runtime plays it, with Start pressed at the title (`OPDS`, session 3;
+   whether 3. and 4. come before it there is to compare frame by frame).
 
 ## Answered
 
@@ -135,6 +128,17 @@ The user's Phoenix screenshots of the opening (session 1, in
   at each boot as a fresh console's (runs stay replayable).
 * (Session 2) The kit's work: committed (1f46573) and pushed, every port's
   submodule moved; this repository committed, not pushed (not yet public).
+* (Session 3, the user's choice) The session dedicated to the save, by the
+  route of item 1 of session 2's TODO: done (`docs/05`).
+
+* (Session 3) The kit's work: committed (0903c17) and pushed; every port's
+  submodule moved (pc-crashnburn 77b8315, PC-Immercenary 975aeb8, both
+  pushed, each with the new baseline noted: traces one item greater).
+  This repository committed locally.
+* (Session 3) **The window** (`pfboot build/disc --boot --window --trace 0
+  --nvram build/nvram`), tried by the user: the logo, the title, Start, the
+  opening film to the kabong stop -- **the sound is there throughout, and
+  right**.
 
 ## Questions for the user
 
@@ -149,7 +153,11 @@ The user's Phoenix screenshots of the opening (session 1, in
   only for cmake, ninja and clang.
 * C++ or Python with `\n` or `\\` goes through Write or Edit, never a
   shell heredoc -- **not even a quoted one** (session 2: a `'EOF'`
-  heredoc into Python still turned `\\n` into a newline in the C++).
+  heredoc into Python still turned `\\n` into a newline in the C++; and
+  again in session 3, caught at once).
+* The NVRAM: `pfboot ... --nvram DIR` to keep it; `lmdump.py
+  DIR/nvram.bin` to read it. A run without `--nvram` starts blank and
+  formats it each time (LMADM and FORMAT run before `LaunchMe`).
 * Always `--max-calls`; never `--trace 1` a long run into a file without
   `grep`/`tail`.
 * The OS images, unpacked (session 1, `build/os/`): `os_code_0_10000.bin`
@@ -178,6 +186,38 @@ The user's Phoenix screenshots of the opening (session 1, in
   Worth a correction there.
 
 # History
+
+## Session 3 (2026-10-08) -- the save: the NVRAM, its filesystem, LMADM
+
+* **The NVRAM** (`docs/05`): the Operator 20.18's `ram` device read, its
+  unit 3 the NVRAM (32 KB at 0x03140000, a byte a word, writes only from a
+  privileged task or the OS's own request); `runtime/pf_nvram.cpp`, and
+  `pfboot --nvram DIR` keeping it in `DIR/nvram.bin`.
+* **The File folio 20.30** read for its linked-memory filesystem: the SWI
+  and vector table (0x721c), the mount (0x1e18) and the folio's start
+  mounting every unit with a filesystem (0x48b8), the walk's entries
+  (`READENTRY`, `ADDENTRY`), `CreateFile`, `DeleteFile`,
+  `DismountFileSystem`, the open file's driver (0x109c) and the
+  filesystem's requests as the 29 steps of 0x513c; all of it in
+  `runtime/pf_file.cpp`, the device's state and buffers kept as the folio
+  keeps them. `CMD_STATUS`'s copy is now by the File folio's version
+  (20.30 on: the buffer's length; 1993's: 0x28).
+* **LMADM and FORMAT**, the disc's own, signed and privileged:
+  `pf_image_header` (23.10's `CreateTask` rules); the shell runs
+  `System/Programs`' programs when the build has them, with their command
+  lines. On a blank NVRAM LMADM finds "Not a flat linked-memory
+  filesystem", runs FORMAT (label, anchor at 132, free space at 152) and
+  mounts it; on a kept one it validates it, "CLEAN".
+* **The save**: `CreateFile`, `ALLOCBLOCKS` of 0xC30, `CMD_WRITE` at block
+  216; read back on the next start. Then the title (`CopyRight.img`), and
+  with Start the opening film (0x2ced4 a seventh seed) to call 196,582,
+  the DataStream's "kabong" read of `.`.
+* **The kit**: regressed on Crash 'n Burn, Immercenary and OMF2097 (old,
+  new, and new without the `ram` device): without it every trace is the
+  same byte for byte; with it only item numbers and OS addresses move;
+  self-test, `pfcheck`, frames unchanged. Committed (0903c17) and pushed
+  with the user's word, every port's submodule moved; the window tried by
+  the user, the sound right throughout.
 
 ## Session 2 (2026-10-08) -- the decompressor in C++, GRAPHIX in the OS's memory, the font
 

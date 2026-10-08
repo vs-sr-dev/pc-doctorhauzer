@@ -4,7 +4,7 @@
 [vs-sr-dev/3dokit](https://github.com/vs-sr-dev/3dokit)) was started by
 Immercenary's port and grew on Crash 'n Burn's; Doctor Hauzer is its third
 game, and the first on Portfolio 20.21. Each entry is a 3dokit commit and
-what this game asked of it. The submodule was taken at **eb96a85**; it is at **aceddb7**.
+what this game asked of it. The submodule was taken at **eb96a85**; it is at **0903c17**.
 
 ## Session 1
 
@@ -102,3 +102,42 @@ Committed and pushed with the user's word; every port's submodule moved
 
 Regressed as 1f46573 was (Crash 'n Burn, Immercenary, OMF2097: traces,
 whole boots, self-test, `pfcheck`, frames): nothing moves.
+
+## Session 3
+
+The save (`docs/05`). One commit, **0903c17**, made and pushed with the
+user's word; every port's submodule then moved to it (pc-crashnburn
+77b8315, PC-Immercenary 975aeb8, both pushed, each noting the new
+baseline of its traces). What it adds:
+
+| file | What |
+|---|---|
+| `runtime/pf_nvram.cpp` (new) | the Operator 20.18's `ram` device (0x214f0: CMD_WRITE 0x21278, CMD_READ 0x21020, CMD_STATUS 0x2140c), unit 3 the NVRAM -- 32 KB at 0x03140000, a write only from a privileged task or the OS's own request --; the other units (ROM, memory) stop the run. The NVRAM outlives each program's boot; `pfboot --nvram DIR` keeps it in `DIR/nvram.bin` |
+| `runtime/pf_file.cpp` | the File folio 20.30's linked-memory filesystem: the mount (0x1e18; `MountFileSystem`, and the folio's start mounting the NVRAM, 0x48b8), `DismountFileSystem` (0x25d8), `CreateFile` (0x403c), `DeleteFile` (0x4190), the walk through its entries (`READENTRY`, `ADDENTRY`, 0x2b1c), and its requests run step by step as 0x513c takes them, the device's state and buffers kept as the folio keeps them; `CMD_STATUS`'s copy by the File folio's own version (20.30 on: the buffer's length, 0x28 at most; 1993's 20.19: 0x28); the shell runs `System/Programs`' programs when the build has their modules, with their command lines |
+| `runtime/pf_task.cpp` | `pf_image_header`: a 3DO header's signature (its length must end the file, else 0xD57B9112; the RSA check itself not made), privilege (a signed image with flag 2 makes a privileged task) and priority, as 23.10's `CreateTask` (0x6cc0) takes them -- for a task's image, and for the program the shell starts |
+| `runtime/pf_os.cpp`, `pf_main.cpp` | `pf_run` with the file's size (the header above) and a command line at the stack's top, as `CreateTask` leaves it; `pfboot --nvram DIR` |
+| `runtime/pf_err.cpp` | `pf_os_code_version(i)`: `os_code`'s images' own versions (kernel, Operator, File folio) |
+| `README.md` | the above in the runtime's row; what is not done yet |
+
+Checked, the old side built from this port's submodule (aceddb7), the new
+from the working tree, and a third from the working tree without the `ram`
+device's creation (session 3's `regbuild.sh`, `regrun.sh`, `itemmask.py`):
+
+* without the device, the five traces are **the same byte for byte**:
+  Crash 'n Burn's `launchme` to call 234 (529 lines) and its `--boot
+  --max-calls 60000 --pad a@1300x1` (124,396 lines), Immercenary's `p`
+  (539,774 lines) and its `--boot --max-calls 300000` replay (810,154
+  lines), OMF2097's `LaunchMe` (107 lines): every other change is neutral
+  for them (no NVRAM, no linked-memory filesystem, `lmadm` passed over
+  without its module, Immercenary's statuses all 0x28 bytes or longer);
+* with it, the device is one more item and 0x70 bytes more of the OS's
+  memory: OMF2097's trace is the same; the other four differ only in item
+  numbers one greater and in OS addresses -- **0 lines** otherwise;
+* the self-test (Crash 'n Burn's optest and `launchme`): 0 failures;
+  `pfcheck`: the six memory runs (0 results, 0 bytes differ), the sixteen
+  Graphics snapshots (16 of 16);
+* Crash 'n Burn's frames: 1,131 to field 3216 and 2,974 of fields
+  8,000-14,000, **0 differ**.
+
+So the other ports' traces will move by the item when their submodules
+move: a new baseline, as 9a38b90's node sizes made one for Immercenary.
