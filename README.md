@@ -126,7 +126,18 @@ folio 20.30's linked-memory filesystem on it, read in the disc's own
 as `startopera` names them: on a blank NVRAM they format it as a fresh
 console's. The game creates its save, writes it and reads it back on the
 next start; it shows its title, `PUSH "P" BUTTON!`, and on Start plays its
-opening film on its own DataStream, to its 196,582nd call. See `TODO.md`.
+opening film on its own DataStream, to its 196,582nd call.
+
+**Session 4**: the opening, the menu and the first room. The stop at call
+196,582 was a read the console never makes: lib3DO's DataStream "kabongs"
+the drive only on a File folio of version 0.0, and the runtime's folio
+nodes had no versions; they now carry the ones the 20.21 kernel gives
+them. With four more calls read on the disc's own OPERAMATH 20.53,
+AUDIOFOLIO 20.27, Operator 20.18 and kernel, the whole opening plays, the
+menu comes up, the attract demos run in the 3D rooms, and Start at the
+menu leads through the prologue to the first room, where the pad moves the
+visitor about. Five million calls on, nothing stops the run. See
+`TODO.md`.
 
 ## Documentation
 
@@ -138,6 +149,7 @@ opening film on its own DataStream, to its 196,582nd call. See `TODO.md`.
 | [03-the-decompressor-and-the-font](docs/03-the-decompressor-and-the-font.md) | the images' decompressor in C++, GRAPHIX in the OS's memory, the folio's font |
 | [04-the-error-texts-and-the-save](docs/04-the-error-texts-and-the-save.md) | `GetSysErr` on the 20.21 kernel, and what the save asks for |
 | [05-the-save](docs/05-the-save.md) | the NVRAM, the File folio's linked-memory filesystem, the disc's own LMADM and FORMAT |
+| [06-the-opening-and-the-first-room](docs/06-the-opening-and-the-first-room.md) | the folios' versions and the kabong read, OPERAMATH 20.53, `SleepAudioTicks`, the timer's microseconds; the run to the first room |
 | [10-3dokit](docs/10-3dokit.md) | what this port gave 3dokit |
 
 ## Licence

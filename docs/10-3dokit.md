@@ -4,7 +4,7 @@
 [vs-sr-dev/3dokit](https://github.com/vs-sr-dev/3dokit)) was started by
 Immercenary's port and grew on Crash 'n Burn's; Doctor Hauzer is its third
 game, and the first on Portfolio 20.21. Each entry is a 3dokit commit and
-what this game asked of it. The submodule was taken at **eb96a85**; it is at **0903c17**.
+what this game asked of it. The submodule was taken at **eb96a85**; it is at **c11e36d**.
 
 ## Session 1
 
@@ -141,3 +141,26 @@ device's creation (session 3's `regbuild.sh`, `regrun.sh`, `itemmask.py`):
 
 So the other ports' traces will move by the item when their submodules
 move: a new baseline, as 9a38b90's node sizes made one for Immercenary.
+
+## Session 4
+
+The opening, the menu and the first room (`docs/06`). One commit, **c11e36d**,
+made and pushed with the user's word; every port's submodule then moved to
+it (pc-crashnburn f9643f6, PC-Immercenary 89ae6ef, both pushed; nothing
+moves in their traces, so no new baseline):
+
+| file | What |
+|---|---|
+| `runtime/pf_kernel.cpp` | KernelBase's `n_Version`/`n_Revision` from the kernel's own header (20.21's 0x17818; 1993's 0x1818c, 23.10's 0x7cb0); from the 20.21 kernel on, the folios' nodes their creators' versions -- each folio's own image's (20.21's 0x12254 after `CreateItem` of a folio, a driver or a device; 23.10's 0x244c; not in 1993's) |
+| `runtime/pf_math.cpp` | OPERAMATH 20.53's `MulVec3Mat33_F16` (SWI 0, Green 0x1c50) and `Dot3_F16` (SWI 12, Green 0x18e0) |
+| `runtime/pf_audio.cpp` | AUDIOFOLIO 20.27's `SleepAudioTicks` (vector -20, 0x4408); a cue's deletion by KernelBase's version (0x4818: above 0x13 its signal freed in its owner's task, whoever deletes it) |
+| `runtime/pf_task.cpp`, `pf.h` | `pf_free_signal(sigs, task)`: the kernel's own, of any task's bits (20.21's 0x1910c) |
+| `runtime/pf_io.cpp` | the timer's unit 1, `CMD_READ` (Operator 20.18's 0x21974): the kernel's timeval from CLIO's counters (20.21's 0x1432c; 1993's 0x14ed4, 23.10's 0x46ac), counted from the runtime's clock |
+| `README.md` | the above in the runtime's row |
+
+Checked against session 3's baseline (0903c17) with session 3's
+`regbuild.sh` and `regrun.sh` (this session's scratchpad,
+`e87dc26d-.../scratchpad`): Crash 'n Burn's `launchme` to call 234 and its
+`--boot --max-calls 60000 --pad a@1300x1`, Immercenary's `p` and its
+`--boot --max-calls 300000` replay, OMF2097's `LaunchMe`: **the same byte
+for byte**, after the folios' versions alone and again after all five.

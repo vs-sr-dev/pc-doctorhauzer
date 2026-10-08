@@ -8,14 +8,15 @@ is at the bottom. Read the top, not the history.
 | | |
 |---|---|
 | the disc on the kit | 366 files, all the pipeline's to the hash; battery clean (`docs/01`) |
-| the OS | Portfolio 20.21; GRAPHIX 20.45, AUDIOFOLIO 20.27, File folio 20.30 (`docs/02`) |
-| `launchme` recompiled | 1,109 functions, 45,525 instructions, **seven seeds** (0x2ced4 added); self-test 0 failures |
+| the OS | Portfolio 20.21; GRAPHIX 20.45, AUDIOFOLIO 20.27, File folio 20.30, OPERAMATH 20.53 (`docs/02`, `docs/06`) |
+| `launchme` recompiled | 1,109 functions, 45,525 instructions, seven seeds; self-test 0 failures |
 | `sramtools`, `lmadm`, `format` recompiled | 199, 64 and 34 functions; self-test 0 failures |
 | `pfboot build/disc --boot` | `lmadm` (and `format` on a blank NVRAM), then `launchme`: the save made, the title, waiting for Start |
-| `... --pad start@400+6` | the opening film on the game's own DataStream, to its **196,582nd OS call**: the "kabong" read of `.` |
-| on the screen | the 3DO logo; the title (`CopyRight.img`, `PUSH "P" BUTTON!`); the opening film |
+| `... --pad start@400+6` | **the whole opening** (Riverhill's logo, the newspaper film, the mansion in 3D, the credits), **the menu**, then the attract demos in the 3D rooms, round again |
+| `... --pad start@11500+6` too | Start at the menu: the prologue, the door, `now LOADING...`, **the first room**; the pad moves the visitor (`--pad down@18100+240 --pad right@18400+90 --pad up@18550+300`) |
+| the stop | **none** to 5,000,000 calls |
 | the NVRAM | `--nvram DIR` keeps it (`DIR/nvram.bin`); the save written, then read back on the next start (`docs/05`) |
-| the kit | **0903c17** in every port: session 3's NVRAM, linked-memory filesystem, LMADM; committed and pushed (`docs/10`) |
+| the kit | **c11e36d** in every port (`docs/06`, `docs/10`): the folios' versions, OPERAMATH 20.53's two SWIs, `SleepAudioTicks` and a cue's deletion, `pf_free_signal` of a task, the timer's unit 1; committed and pushed |
 
 ```sh
 cd D:/Homebrew6 && PYTHONIOENCODING=utf-8 python -m 3dokit.recomp --out pc-doctorhauzer/build/recomp --optest \
@@ -26,95 +27,91 @@ cd D:/Homebrew6 && PYTHONIOENCODING=utf-8 python -m 3dokit.recomp --out pc-docto
 export PATH=/c/msys64/mingw64/bin:$PATH                       # for cmake/ninja/clang only: its python has no capstone
 cmake -S build/recomp -B build/recomp-build -G Ninja -DCMAKE_CXX_COMPILER=clang++ && ninja -C build/recomp-build
 build/recomp-build/selftest build/recomp/selftest/*.txt
-build/recomp-build/pfboot build/disc --boot --trace 1 --max-calls 200000 --pad start@400+6 | tail   # to the stop
-build/recomp-build/pfboot build/disc --boot --trace 0 --max-calls 196580 --pad start@400+6 --frames DIR --frames-at 400-100000/60
-build/recomp-build/pfboot build/disc --boot --nvram DIR ...                        # the NVRAM kept between runs
+P="--pad start@400+6 --pad start@11500+6"                     # Start at the title, Start at the menu
+build/recomp-build/pfboot build/disc --boot --trace 1 --max-calls 5000000 $P | tail   # 54 s; no stop
+build/recomp-build/pfboot build/disc --boot --trace 0 --max-calls 5000000 $P --frames DIR --frames-at 11400-50000/60
+build/recomp-build/pfboot build/disc --boot --window --trace 0 --nvram build/nvram    # to play it
 ```
 
-Session 3's scratchpad (`a5bbcab7-.../scratchpad`): `build.sh` (the
-port's build, the commands above), `plist.py PROGRAM [FUNC...]` (a program
-listed function by function: SWIs named, strings, callees' names),
-`kp.py TRACE` (the `kprintf`s of a trace put back into text), `lmdump.py
-nvram.bin` (the NVRAM's filesystem block by block), `ff.dis` (the File
-folio 20.30 disassembled whole), `regbuild.sh VARIANT KITPARENT` and
-`regrun.sh VARIANT` (the other ports' builds and runs), `itemmask.py OLD
-NEW` (two traces apart from items one greater and OS addresses).
+Session 4's scratchpad (`e87dc26d-.../scratchpad`): `build.sh` (the
+port's build from the kit's working tree), `regbuild.sh VARIANT KITPARENT`
+and `regrun.sh VARIANT` (the other ports' builds and runs; session 3's
+`reg/out-new` the baseline, 0903c17), `sheet.py DIR OUT.png FIRST LAST
+STEP` (a contact sheet of `--frames`), the disassemblies with strings:
+`ff2.dis` (File folio 20.30), `k.dis` (kernel 20.21), `kc.dis` (1993's
+kernel), `ki.dis` (23.10's), `op.dis` (Operator 20.18), `om.dis`
+(OPERAMATH 20.53), `au.dis` (AUDIOFOLIO 20.27). Session 3's (`a5bbcab7-`)
+`plist.py`, `kp.py`, `lmdump.py`, `itemmask.py`; session 1's
+(`21eda0d0-`) `odis.py IMAGE BASE ADDR [N]` and `gvec.py`.
 
 ## The work, in order
 
-### 1. The "kabong" read (the stop at call 196,582)
+### 1. Publishing this repository
 
-The save is in (`docs/05`). With Start pressed at the title, the opening
-film plays and the game's DataStream (lib3DO's: "Can't open kabonging
-file", "Can't create jamming I/O", "Can't create unjamming I/O", the
-functions at 0x19880 and 0x19760) opens `.` -- the current directory, the
-CD's root -- at call 12,278, asks its `CMD_STATUS` for the block size
-(0x800 when it says 0 or less), and at call 196,582 `CMD_READ`s one block
-from block 0 of it into a buffer of its own: a read meant only to move the
-drive. The runtime's disc is a host directory, whose directories have no
-blocks, and stops ("a read of 1 blocks from block 0 of "/", past its 0").
-To read, on the disc's own code:
+The user's criterion (session 1): published once the game is playable.
+After session 4 the user's view: if the first rooms play in the window
+without a crash and with their sound, it is met. On the user's word:
+create `vs-sr-dev/pc-doctorhauzer` on GitHub and push (the README's links
+to 3dokit and the documentation repository are already public).
 
-* the File folio 20.30's driver for a read of a directory on a CD (its
-  optimized filesystem's functions, the table at 0x224c: 0x1448, 0x1510,
-  0x199c, 0x1ac4, 0x1a48), and its own "## KABONG ##" string at 0x64c8:
-  what it does with such a read;
-* what the root directory's `File` says on the console (`fi_BlockCount`,
-  `fi_ByteCount`: the Opera directory's own blocks), and what its block 0
-  holds -- the disc image's, which the extracted tree does not keep; the
-  kit's `disc.py` and `tdk_opera` read it from the image.
+### 2. Play it: the window, and the next stop
 
-### 2. The text in the folio's font, when the run reaches it
+The run no longer stops by itself. Next, with the user: the window
+(`--window --nvram build/nvram`), playing from the first room on --
+whether the sound is right in the rooms (the music `music004.aifc`, the
+effects), the doors, the camera's cuts, the items, the menu's `CONTINUE`
+(the save read back: `sramtools`?) and `OPERATION`. Each call the runtime
+does not answer yet stops the run, as before; record the presses that
+reach it (`--pad`) to replay it here.
+
+### 3. The text in the folio's font, when the run reaches it
 
 The font's calls are in (`docs/03`), checked on 20.45's own code. Still
 unseen: `DrawChar`/`DrawText8` (the box at 0x1fa34, reached from 0x1f00c
-and 0x1f598). The title's `PUSH "P" BUTTON!` turned out to be part of an
-image (`CopyRight.img`), not the folio's font. When it is reached: check
-its frame against Phoenix's (a character not in the font stops the run,
-with the word the folio would point the CCB at); and add DrawChar to
-`pfcheck` (its `DrawCels` is refused there
-now: compare up to the cel engine, the bitmap's pixels set aside).
+and 0x1f598). The game's subtitles are its own font (`fontNew.bin`), not
+the folio's. When it is reached: check its frame against Phoenix's, and
+add DrawChar to `pfcheck`.
 
-### 3. On from there, one call at a time
+### 4. Open ends of session 4
+
+* **The devices' versions.** The 20.21 kernel gives a driver's and a
+  device's node its creator's version too (0x12254 for types 13 and 15):
+  on the console the Operator's devices (`timer`, `SPORT`, `ram`) would be
+  20.18, the File folio's 20.30. The runtime's devices are still 0.0; no
+  program has read one yet.
+* **A directory's blocks.** The runtime's directories have
+  `fi_BlockCount` and `fi_ByteCount` 0 and no bytes; the console's root
+  is 1 block of 2048 with seven avatars, its bytes the disc image's
+  (`docs/06`). A read of a directory's blocks still stops the run.
+* **The opening against Phoenix.** The user's screenshots (session 1)
+  show "in 1952" in red italics and "1952年" in a white box between
+  Riverhill's logo and the newspaper; the runtime's frames show the
+  newspaper first, then "現在" in a white box. Compare frame by frame
+  (the same presses) before deciding anything.
+
+### 5. On from there
 
 What the surface promises (`docs/01`): `/nvram/another` (a second file in
 the NVRAM); `$boot/OrgData/program/sramtools` started by `launchme` -- the
 save-game manager, which will likely want the File folio's directory
 vectors (`OpenDirectoryItem` 0x6214, `OpenDirectoryPath` 0x641c,
 `ReadDirectory` 0x6430, `CloseDirectory` 0x661c: not in the runtime yet);
-`ControlMem`; the films through the game's own DataStream (`OrgData/stream`,
-eight streams: OPDS plays); the music (`OrgData/music`, AIFC SDX2) and the effects; the
-3D rooms (many small cels a frame, `MapCel`, the projector's edge cases;
-729 8-bit cels in the rooms); Japanese text in the game's own font
-(`OrgData/font/fontNew.bin`, which `launchme` reads right after the
-folio's font). Each difference between 1993 and 23.10 the game reaches is
-read on 20.21's code (`docs/02`, "The runtime's other 1993/23.10 places").
+`ControlMem`; the other streams (`OrgData/stream`, eight; OPDS and SLDS
+play); the 33 rooms. Each difference between 1993 and 23.10 the game
+reaches is read on 20.21's code (`docs/02`).
 
 Open ends of session 2, for when they are needed: the font's addresses of
-GRAPHIX 20.31 and 23.10 (`kFonts`; no game on the kit calls the font
-there); the 20.21 kernel's own `InitList` and allocator for `pfcheck`
-(stand-ins the runtime's way now).
+GRAPHIX 20.31 and 23.10 (`kFonts`); the 20.21 kernel's own `InitList` and
+allocator for `pfcheck`.
 
-### 4. The reference: Phoenix
+### 6. The reference: Phoenix
 
 The user's Phoenix screenshots of the opening (session 1, in
 `D:\Tools\phoenix28\ph-win64\3DO\hauzer@panafz10@gio ottobre 8 2026
-18-56-*.jpg`), in order:
-
-1. the 3DO logo, on its grey panel, fading in -- the runtime draws it the
-   same (33 fields, at 120,40);
-2. the title: "Doctor Hauzer" in green, "(C)1994 Riverhill Soft Inc.",
-   "(C)1994 Matsushita Electric Industrial Co., Ltd." and **`PUSH "P"
-   BUTTON!`** in yellow capitals -- an image, `CopyRight.img`, which the
-   runtime shows the same (session 3);
-3. Riverhill Soft's logo: white squares appearing on a blue field, then
-   the fourth, red, turning, on black, "RIVERHILL SOFT" under it (a film:
-   `GODS`, 260x200, 131 frames, no sound, is the candidate);
-4. "in 1952" in red italics and "1952年" in a white box (Japanese text:
-   the game's own font);
-5. a newspaper, "Archeologists & Historians" (a film, the intro) -- the
-   runtime plays it, with Start pressed at the title (`OPDS`, session 3;
-   whether 3. and 4. come before it there is to compare frame by frame).
+18-56-*.jpg`), in order: the 3DO logo (the runtime draws it the same);
+the title with `PUSH "P" BUTTON!` (`CopyRight.img`, the same); Riverhill
+Soft's logo (the runtime plays it, a blue field); "in 1952" and "1952年"
+(see 4.); the newspaper film (the runtime plays it).
 
 ## Answered
 
@@ -139,6 +136,9 @@ The user's Phoenix screenshots of the opening (session 1, in
   --nvram build/nvram`), tried by the user: the logo, the title, Start, the
   opening film to the kabong stop -- **the sound is there throughout, and
   right**.
+* (Session 4) The kabong read (session 3's item 1): a read the console
+  never makes -- the game kabongs only on a File folio 0.0, and the
+  runtime's folio nodes had no versions (`docs/06`).
 
 ## Questions for the user
 
@@ -186,6 +186,31 @@ The user's Phoenix screenshots of the opening (session 1, in
   Worth a correction there.
 
 # History
+
+## Session 4 (2026-10-08/09) -- the opening, the menu, the first room
+
+* **The kabong read** (`docs/06`): lib3DO's DataStream jams the drive
+  only on a File folio of version 0.0 (`launchme` 0x19a50). The 20.21
+  kernel gives a folio's node its creating task's version (0x12254; 23.10
+  too, not 1993), each folio's its own image's: File 20.30, GRAPHIX 20.45,
+  AUDIOFOLIO 20.27, OPERAMATH 20.53; KernelBase the kernel's header's
+  (0x17818). The runtime now does the same; the game never opens `.`.
+  On the way, 20.30's CD read path (0x1448, the scheduler 0x1510: the
+  nearest avatar, no check of the file's end) and the root's `File` at the
+  mount (1 block of 2048, seven avatars), kept for a directory's read.
+* **OPERAMATH 20.53**: its tables (Red 0x2cc8, Green 0x2d2c, software
+  0x2c64); `MulVec3Mat33_F16` (0x1c50) and `Dot3_F16` (0x18e0).
+* **AUDIOFOLIO 20.27**: `SleepAudioTicks` (0x4408); a cue's deletion by
+  KernelBase's version (0x4818), met at once: a task deleted with its
+  cues; `pf_free_signal` of another task (the kernel's 0x1910c).
+* **The timer's unit 1** (`CMD_READ`, Operator 20.18's 0x21974; the
+  kernel's 0x1432c): a timeval from CLIO's three counters, 16 us steps.
+* **The run**: the whole opening, the menu, the attract demos in the 3D
+  rooms; with Start at the menu the prologue, the door, the first room,
+  the pad moving the visitor; no stop to 5,000,000 calls.
+* **The kit**: five changes, regressed (the other ports' traces the same
+  byte for byte); c11e36d, pushed with the user's word, every port's
+  submodule moved (pc-crashnburn f9643f6, PC-Immercenary 89ae6ef).
 
 ## Session 3 (2026-10-08) -- the save: the NVRAM, its filesystem, LMADM
 
