@@ -46,9 +46,34 @@ and shows `NoMemory.img`. To read, on the disc's own code:
   ram 3 0 nvram` (`System/Programs/LMADM`, which the runtime's shell
   passes over): its block size, its size, its free space on a fresh
   console -- what `CMD_STATUS` and `FILECMD_ALLOCBLOCKS` answer;
+* what the disc brings for it (session 2's survey; `System/Programs`, not
+  compressed): **`FORMAT`** (`format DEVICENAME UNIT OFFSET FSNAME`: the
+  device's blocks from its status, then a label, an anchor and the
+  free space, each written to an absolute block -- a fresh NVRAM's
+  layout, from the disc's own code); **`CHKNVRAM`** (`/nvram` not mounted:
+  `$bin/format ram 3 0 nvram`, then mount); **`LMADM`** (`-a` auto-maintain,
+  `-c` check, `-d` defragment, `-m`/`-u` mount: "Not a flat linked-memory
+  filesystem", its passes over the superblock, the block links and the
+  files' sizes name the structures -- fingerprint, flink and blink
+  offsets, block count, header block count, byte count); **`LMFS`** (a
+  test tool: create, delete, read and write files in `/nvram`, and set each
+  of those header fields by hand). None of the kernel's or the folios'
+  images holds the string "nvram": the File folio's linked-memory code is
+  generic, the NVRAM is the `ram` device's unit 3 (the Operator 20.18,
+  `build/os/os_code_1_20000.bin`; `hardware_addrs.h`: NVRAM at
+  0x03140000).
+* the route this suggests: the `ram` device's unit 3 in the runtime (its
+  status: block size and count, from the Operator's driver; reads and
+  writes on a byte image), the File folio's mount of a linked-memory
+  filesystem and its driver, then **`LMADM` recompiled and run by the
+  shell** as `startopera` names it (`$c/lmadm -a ram 3 0 nvram`), so that
+  the disc's own code formats a blank NVRAM (through `format`) and mounts
+  it -- rather than the runtime laying out a filesystem itself;
 * the host side (decided): `pfboot --nvram DIR` keeps the NVRAM's files in
-  a host directory; without it an NVRAM in memory, empty at each boot as a
-  fresh console's.
+  a host directory -- most simply the device's bytes, one image file there,
+  as the console keeps them; without it an NVRAM in memory, blank at each
+  boot, which the disc's own `lmadm`/`format` then prepare as on a fresh
+  console.
 
 ### 2. The text in the folio's font, when the run reaches it
 
