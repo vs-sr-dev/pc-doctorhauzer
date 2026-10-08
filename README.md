@@ -112,8 +112,9 @@ folio's built-in font, which no game on the kit had used.
 byte against the images' own code on the three discs; GRAPHIX's image laid
 in the runtime's OS memory, and the folio's built-in font answered from
 its own data and code, checked on it. `launchme` goes on to read its own
-Japanese font and to look for its save in NVRAM, and stops at its 9,015th
-call, `GetSysErr`. See `TODO.md`.
+Japanese font and to look for its save in NVRAM; the kernel's `GetSysErr`
+follows, its texts read from the disc's own kernel and File folio, and the
+run stops at its 9,058th call, `CreateFile`: the save. See `TODO.md`.
 
 ## Documentation
 
@@ -123,6 +124,7 @@ call, `GetSysErr`. See `TODO.md`.
 | [01-the-disc-on-the-kit](docs/01-the-disc-on-the-kit.md) | what 3dokit reads on this disc, and what it does not |
 | [02-the-os-version](docs/02-the-os-version.md) | Portfolio 20.21: the kernel, the folios, and the runtime's 1993/23.10 switches |
 | [03-the-decompressor-and-the-font](docs/03-the-decompressor-and-the-font.md) | the images' decompressor in C++, GRAPHIX in the OS's memory, the folio's font |
+| [04-the-error-texts-and-the-save](docs/04-the-error-texts-and-the-save.md) | `GetSysErr` on the 20.21 kernel, and what the save asks for |
 | [10-3dokit](docs/10-3dokit.md) | what this port gave 3dokit |
 
 ## Licence

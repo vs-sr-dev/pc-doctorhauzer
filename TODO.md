@@ -11,9 +11,9 @@ is at the bottom. Read the top, not the history.
 | the OS | Portfolio 20.21; GRAPHIX 20.45, AUDIOFOLIO 20.27, File folio 20.30 (`docs/02`) |
 | `launchme` recompiled | 1,109 functions, 45,525 instructions, six seeds; self-test 0 failures |
 | `sramtools` recompiled | 199 functions, 14,047 instructions; self-test 0 failures |
-| `pfboot build/disc --boot` | the shell's scripts, then `launchme` past the font to its **9,015th OS call** |
+| `pfboot build/disc --boot` | the shell's scripts, then `launchme` past the font and `GetSysErr` to its **9,058th OS call**, `CreateFile` |
 | on the screen | the 3DO logo (`OrgData/etc/3DOlogo.cel`, 8-bit coded, at 120,40), faded in, then dimmed |
-| the kit | 1f46573 in every port: session 2's decompressor and font, committed and pushed (`docs/10`) |
+| the kit | aceddb7 in every port: session 2's decompressor, font and `GetSysErr`, committed and pushed (`docs/10`) |
 
 ```sh
 PYTHONIOENCODING=utf-8 python -m 3dokit.recomp --out build/recomp --optest \
@@ -23,27 +23,32 @@ export PATH=/c/msys64/mingw64/bin:$PATH                                # for cma
 cmake -S build/recomp -B build/recomp-build -G Ninja -DCMAKE_CXX_COMPILER=clang++ && ninja -C build/recomp-build
 build/recomp-build/selftest build/recomp/selftest/optest.txt build/recomp/selftest/launchme.txt build/recomp/selftest/sramtools.txt
 build/recomp-build/pfboot build/disc --boot --trace 1 --max-calls 10000 | tail   # to the stop
-build/recomp-build/pfboot build/disc --boot --trace 0 --max-calls 9014 --frames DIR
+build/recomp-build/pfboot build/disc --boot --trace 0 --max-calls 9057 --frames DIR
 build/recomp-build/pfboot build/disc --boot --trace 0 --snap N DIR               # then, for a font call:
 python -m 3dokit.pfcheck build/disc/System/Kernel/os_code DIR --graphix build/disc/System/Folios/GRAPHIX [--font-start]
 ```
 
 ## The work, in order
 
-### 1. `GetSysErr` and the save (the stop at call 9,015)
+### 1. The save: NVRAM and the File folio's write side (the stop at call 9,058)
 
-`launchme` opens `/nvram/RH_HAUZERJ` (`OpenDiskFile`, from 0x17cb0); the
-runtime has no `/nvram` and answers `FERR_NOFILE` (0xD556F101), which is
-also what a console whose NVRAM holds no save would answer. The game then
-calls **`GetSysErr`** (Kernel -88, from 0x2b2f4: a buffer at 0x7fde4 of
-0x80 bytes, the error) for the error's text. To read on the 20.21 kernel
-(`build/os/os_code_0_10000.bin`, at 0x10000; its tables at 0x1b610 and
-0x1b9f8 are not laid out as 1993's -- find its vector table first): how it
-builds the text (the error's fields, the folios' `ErrorText` items, the
-"no such error" form), and what of it the game shows or keeps. Then what
-the game does without a save: likely `CreateFile` and a write (the File
-folio's write side, which the runtime lacks) -- and the runtime's NVRAM,
-a directory of the host's (the kit's "not yet" column).
+`GetSysErr` is in (`docs/04`). The game's save routine (0x18000) now asks
+for `CreateFile("/nvram/RH_HAUZERJ")`, then `CMD_STATUS`,
+`FILECMD_ALLOCBLOCKS` and `CMD_WRITE` of 0xC30 bytes on the new file
+(`docs/04`, "What the save asks for"); without them it deletes the file
+and shows `NoMemory.img`. To read, on the disc's own code:
+
+* the File folio 20.30 (`build/os/os_code_2_0.bin`, linked at 0):
+  `CreateFile` (SWI 9) and `DeleteFile` (SWI 10), and its file driver's
+  `CMD_STATUS`, `FILECMD_ALLOCBLOCKS`, `CMD_WRITE` on the linked-memory
+  filesystem;
+* how `/nvram` comes to be: the `ram` device's unit 3, kept by `$c/lmadm -a
+  ram 3 0 nvram` (`System/Programs/LMADM`, which the runtime's shell
+  passes over): its block size, its size, its free space on a fresh
+  console -- what `CMD_STATUS` and `FILECMD_ALLOCBLOCKS` answer;
+* the host side (decided): `pfboot --nvram DIR` keeps the NVRAM's files in
+  a host directory; without it an NVRAM in memory, empty at each boot as a
+  fresh console's.
 
 ### 2. The text in the folio's font, when the run reaches it
 
@@ -98,6 +103,11 @@ The user's Phoenix screenshots of the opening (session 1, in
 * (Session 1) This repository is published once the game is playable.
 * (Session 1) The node sizes: each folio's own, by its version (done, `docs/02`).
 * (Session 2) The decompressor in C++, then the font: done (`docs/03`).
+* (Session 2) `GetSysErr`: committed (aceddb7) and pushed, every port's
+  submodule moved.
+* (Session 2) **The NVRAM on the host**: `pfboot --nvram DIR` keeps its files
+  in a host directory between runs; without it, an NVRAM in memory, empty
+  at each boot as a fresh console's (runs stay replayable).
 * (Session 2) The kit's work: committed (1f46573) and pushed, every port's
   submodule moved; this repository committed, not pushed (not yet public).
 
@@ -164,6 +174,10 @@ The user's Phoenix screenshots of the opening (session 1, in
 * **The boot** goes on to call 9,015: the game's Japanese font file read,
   the logo dimmed, the save looked for in `/nvram` and `GetSysErr` asked
   for the error's text.
+* **`GetSysErr`** (`docs/04`, `runtime/pf_err.cpp`): the 20.21 kernel's
+  0x1aacc, every table and string read from the disc's own kernel and
+  File folio ("FFS-Severe-System-extended-No such file"); the run goes on
+  to call 9,058, `CreateFile`: the save.
 * **The kit**: regressed (Crash 'n Burn, Immercenary, OMF2097: traces,
   whole boots, self-test, `pfcheck`, frames), nothing moves; 1f46573,
   pushed with the user's word, in every port.

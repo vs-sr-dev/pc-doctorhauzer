@@ -4,7 +4,7 @@
 [vs-sr-dev/3dokit](https://github.com/vs-sr-dev/3dokit)) was started by
 Immercenary's port and grew on Crash 'n Burn's; Doctor Hauzer is its third
 game, and the first on Portfolio 20.21. Each entry is a 3dokit commit and
-what this game asked of it. The submodule was taken at **eb96a85**; it is at **1f46573**.
+what this game asked of it. The submodule was taken at **eb96a85**; it is at **aceddb7**.
 
 ## Session 1
 
@@ -90,3 +90,15 @@ from the working tree (session 2's `buildold.sh`, `buildnew.sh`,
 On this disc: `pfcheck` on 20.45, the font's start and the three calls
 `launchme` makes (snapshots 556-558), 0 bytes differ; the run goes on from
 call 556 to call 9,015 (`GetSysErr`).
+
+### aceddb7: `GetSysErr`
+
+Committed and pushed with the user's word; every port's submodule moved
+(pc-crashnburn 432c12c, PC-Immercenary 1cebb1b, both pushed).
+
+| file | What |
+|---|---|
+| `runtime/pf_err.cpp` | Kernel -88 `GetSysErr` as the 20.21 kernel's 0x1aacc does it, every table and string read from the disc's own images: `os_code`'s three, unpacked by `pf_aif` -- the kernel's tables at its version's addresses, the File folio 20.30's ErrorText (its tag list at 0xf8c, "File errors", object `FFS`). Another kernel version, or an extended error of an object whose ErrorText is not read, stops the run (`docs/04`) |
+
+Regressed as 1f46573 was (Crash 'n Burn, Immercenary, OMF2097: traces,
+whole boots, self-test, `pfcheck`, frames): nothing moves.
