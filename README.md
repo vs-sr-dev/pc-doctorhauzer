@@ -106,7 +106,14 @@ self-test at 0 failures, and the first boot: the shell carries out the
 disc's scripts, `launchme` opens its folios, its screens, SPORT, the timer
 and the audio folio, loads its `3DOlogo.cel` and draws it with the cel
 engine, and stops at its 556th OS call, `ResetCurrentFont` -- the Graphics
-folio's built-in font, which no game on the kit had used. See `TODO.md`.
+folio's built-in font, which no game on the kit had used.
+
+**Session 2**: the System images' decompressor in C++, checked byte for
+byte against the images' own code on the three discs; GRAPHIX's image laid
+in the runtime's OS memory, and the folio's built-in font answered from
+its own data and code, checked on it. `launchme` goes on to read its own
+Japanese font and to look for its save in NVRAM, and stops at its 9,015th
+call, `GetSysErr`. See `TODO.md`.
 
 ## Documentation
 
@@ -115,6 +122,7 @@ folio's built-in font, which no game on the kit had used. See `TODO.md`.
 | [TODO](TODO.md) | the next session's work, and the history of sessions |
 | [01-the-disc-on-the-kit](docs/01-the-disc-on-the-kit.md) | what 3dokit reads on this disc, and what it does not |
 | [02-the-os-version](docs/02-the-os-version.md) | Portfolio 20.21: the kernel, the folios, and the runtime's 1993/23.10 switches |
+| [03-the-decompressor-and-the-font](docs/03-the-decompressor-and-the-font.md) | the images' decompressor in C++, GRAPHIX in the OS's memory, the folio's font |
 | [10-3dokit](docs/10-3dokit.md) | what this port gave 3dokit |
 
 ## Licence
