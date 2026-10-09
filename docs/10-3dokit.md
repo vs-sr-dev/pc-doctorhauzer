@@ -215,3 +215,20 @@ build 72 and Escape from Monster Manor's build 419, other code and two
 vectors more -- and `pf_font`'s `kFonts` keys the font's addresses by the
 version alone (pc-escapefrommonstermanor's `docs/02`); keying it by build
 is on that port's list, and must leave this disc's font as it is.
+
+## From pc-escapefrommonstermanor's session 2
+
+One commit, **45a81b0**, pushed with the user's word; this port's
+submodule moved to it. The audio folio's envelopes, as AUDIOFOLIO 21.10
+makes and moves them -- this disc's 20.27 is the same code but for one
+thing 21.10 adds (a chunk's timer at least one tick on), which the runtime
+does by version --; GRAPHIX's font keyed by **build** as well as version,
+the build read from the image's own build line (this disc's
+`graphix 20.45.72`); `pfcheck`'s `FontCall` for build 419 as well, the
+build told by the folio's words.
+
+Nothing moves: the boot into the 3D rooms (893,210 lines) is b1b7739's
+byte for byte, and `pfcheck --font-start` on this disc's calls 986
+`ResetCurrentFont`, 987 `GetCurrentFont` (0x4E69E4 both) and 988
+`SetCurrentFontCCB` leaves 0 bytes different, the start included (the
+calls' numbers have moved since `docs/03`'s 556-558, as the kit grew).
