@@ -16,7 +16,7 @@ is at the bottom. Read the top, not the history.
 | `... --pad start@11500+6` too | Start at the menu: the prologue, the door, `now LOADING...`, **the first room**; the pad moves the visitor (`--pad down@18100+240 --pad right@18400+90 --pad up@18550+300`) |
 | the stop | **none** to 5,000,000 calls |
 | the NVRAM | `--nvram DIR` keeps it (`DIR/nvram.bin`); the save written, then read back on the next start (`docs/05`) |
-| the kit | **075ad17** in every port (`docs/06`, `docs/10`): c11e36d (the folios' versions, OPERAMATH 20.53's two SWIs, `SleepAudioTicks` and a cue's deletion, `pf_free_signal` of a task, the timer's unit 1), then an AIFF's rate read right and the kernel's quantum (the rooms' music); committed and pushed |
+| the kit | **5d23270** in every port (`docs/06`, `docs/10`): c11e36d (the folios' versions, OPERAMATH 20.53's two SWIs, `SleepAudioTicks` and a cue's deletion, `pf_free_signal` of a task, the timer's unit 1), then an AIFF's rate read right and the kernel's quantum (the rooms' music); then 5d23270, the README (Doctor Hauzer among the ports); committed and pushed |
 
 ```sh
 cd D:/Homebrew6 && PYTHONIOENCODING=utf-8 python -m 3dokit.recomp --out pc-doctorhauzer/build/recomp --optest \

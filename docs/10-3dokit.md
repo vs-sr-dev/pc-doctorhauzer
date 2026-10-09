@@ -4,7 +4,7 @@
 [vs-sr-dev/3dokit](https://github.com/vs-sr-dev/3dokit)) was started by
 Immercenary's port and grew on Crash 'n Burn's; Doctor Hauzer is its third
 game, and the first on Portfolio 20.21. Each entry is a 3dokit commit and
-what this game asked of it. The submodule was taken at **eb96a85**; it is at **075ad17**.
+what this game asked of it. The submodule was taken at **eb96a85**; it is at **5d23270**.
 
 ## Session 1
 
@@ -179,3 +179,13 @@ Checked: Crash 'n Burn's and OMF2097's traces the same byte for byte;
 Immercenary's differ only in its samples' rates (22 lines of `p` and of
 its replay), and its replay's sound (`--wav`, to 1,500,000 calls,
 471,859,208 bytes) is the same byte for byte.
+
+## Session 5
+
+One commit, **5d23270**, the README only, pushed with the user's word;
+every port's submodule then moved to it: this port in the Ports table
+(Portfolio 20.21, what it asked of the kit, playable), its disc in the
+Checks' rows, its run in the Known gaps and the History; and the sweep --
+three games, the window's real time, the DSP that plays and the kernel's
+quantum no longer listed as missing, `pfboot --dsp-check`, `--nvram` and
+`--unpack` among the commands. Nothing to build or run.
