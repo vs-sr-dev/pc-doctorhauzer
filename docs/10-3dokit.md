@@ -189,3 +189,29 @@ Checks' rows, its run in the Known gaps and the History; and the sweep --
 three games, the window's real time, the DSP that plays and the kernel's
 quantum no longer listed as missing, `pfboot --dsp-check`, `--nvram` and
 `--unpack` among the commands. Nothing to build or run.
+
+## From pc-escapefrommonstermanor's session 1
+
+One commit, **b1b7739**, pushed with the user's word; this port's
+submodule moved to it. Discovery now finds a frameless function reached
+only by a pointer from a literal pool -- among them **this port's seed
+0x2ced4** (the DataStream's leaf after `_InitializeThread`, which Escape
+from Monster Manor's DataStream reaches too), which stays on the command
+line, harmless --; Operamath's `MulMat33Mat33_F16` (20.53's 0x1ee0 is the
+same code as 21.10's) and Graphics' `FillRect` (GRAPHIX 20.45's SWI 35:
+this disc's build 72 at 0x2b5c, the same code as build 419's); cels with
+CCBPRE clear and DataStreams with no `SHDR` in the file readers.
+
+The generated C++ gains four functions (the C library's `return 0` stub
+reached by pointer: `launchme`'s 0x16328 and 0x2bf08, `LMADM`'s 0x37ac,
+`FORMAT`'s 0x1154). The boot with Start at the title and at the menu
+(`--max-calls 400000 --pad start@400+6 --pad start@11500+6`, 893,210
+lines, into the 3D rooms) is 5d23270's byte for byte; `launchme`'s
+self-test with the new discovery: 246 functions, 3,812 vectors, 0
+failures; this disc's cels and streams read as before.
+
+**Worth knowing here**: GRAPHIX 20.45 exists in two builds -- this disc's
+build 72 and Escape from Monster Manor's build 419, other code and two
+vectors more -- and `pf_font`'s `kFonts` keys the font's addresses by the
+version alone (pc-escapefrommonstermanor's `docs/02`); keying it by build
+is on that port's list, and must leave this disc's font as it is.
