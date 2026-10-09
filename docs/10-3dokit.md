@@ -232,3 +232,8 @@ byte for byte, and `pfcheck --font-start` on this disc's calls 986
 `ResetCurrentFont`, 987 `GetCurrentFont` (0x4E69E4 both) and 988
 `SetCurrentFontCCB` leaves 0 bytes different, the start included (the
 calls' numbers have moved since `docs/03`'s 556-558, as the kit grew).
+
+## 42a44c2, the README
+
+pc-escapefrommonstermanor among the ports, published; the cel engine's
+missing time among the known gaps. Nothing to build or run.
